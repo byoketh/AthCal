@@ -1,6 +1,6 @@
 # HTML request/parse
 import requests
-page = requests.get("https://www.chlathletics.org/g5-bin/client.cgi?cwellOnly=1&G5MID=052119071109056048054057085057079121108097120099075117068089100068089084043048101043098053076105052097056050047110098085078120075090073066076116116112089043067103066054066121048&G5statusflag=view&G5genie=661&G5button=12&vw_worksheet=4087&vw_type=mySchoolOnly&school_id=7")
+page = requests.get("https://www.chlathletics.org/g5-bin/client.cgi?cwellOnly=1&G5MID=052119071109056048054057085057079121108097120099075117068089100068089084043048101052089074114105052097056050047110098085078120075090073066076116116112089043067103066054066121048&G5statusflag=view&G5genie=661&G5button=12&vw_worksheet=3934&vw_type=mySchoolOnly&school_id=7")
 page
 from bs4 import BeautifulSoup
 rawhtml = BeautifulSoup(page.content, 'html.parser')
@@ -19,30 +19,36 @@ import pickle
 credentials = pickle.load(open("token.pkl", "rb"))
 service = build("calendar", "v3", credentials=credentials)
 
-loop = True
+loopbool = True
 datecell = 34
 typecell = 35
 timecell = 36
 oppocell = 37
 locacell = 38
+UIDnum = 0
 
 def loop():
-    while loop == True:
+    global loopbool, datecell, typecell, timecell, oppocell, locacell, UIDnum
+    while loopbool == True:
         datecell += 9
         typecell += 9
         timecell += 9
         oppocell += 9
         locacell += 9
+        UIDnum += 1
         new_event()
+
 
 #Define new_event function
 def new_event():
+    global loopbool, datecell, typecell, timecell, oppocell, locacell, UIDnum
+    global time, location, type, date
     time = rawhtml.find_all('td')[timecell].get_text()
     location = rawhtml.find_all('td')[locacell].get_text()
     type = rawhtml.find_all('td')[typecell].get_text()
     date = rawhtml.find_all('td')[datecell].get_text()
     if date == '':
-        loop = False
+        loopbool = False
     elif time == r'TBD\xa0':
         loop()
     else:
@@ -69,7 +75,7 @@ def new_event():
         elif month == 'Aug':
             month = '08'
         elif month == 'Sep':
-            month == '09'
+            month = '09'
         elif month == 'Oct':
             month = '10'
         elif month == 'Nov':
@@ -81,6 +87,8 @@ def new_event():
         time = time[:-1]
         if time[1] == ':':
             time = '0' + time
+        if time[:2] == 'TB':
+            loop()
         hour = int(time[:2])
         meridian = time[5:]
         #Special-case '12AM' -> 0, '12PM' -> 12 (not 24)
@@ -102,6 +110,8 @@ def new_event():
         type = type[:-1]
         #Create title
         title = location + " " + type
+        #Define event iCalUID
+        UID = "UID" + str(UIDnum)
         event = {
           'summary': title,
           'location': location,
@@ -115,11 +125,12 @@ def new_event():
           'end': {
             'dateTime': endtime
           },
-          'iCalUID': 'originalUID'
+          'iCalUID': UID
         }
         imported_event = service.events().import_(calendarId='primary', body=event).execute()
         print ("Event imported ID: " + imported_event['id'])
         loop()
+
 
 new_event()
 print("END")
