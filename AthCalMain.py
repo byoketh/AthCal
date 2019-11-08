@@ -1,21 +1,32 @@
-# HTML request/parse
+try:
+    from confg import *
+    print("config file imported")
+except ModuleNotFoundError:
+    print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
 import requests
-page = requests.get("https://www.chlathletics.org/g5-bin/client.cgi?cwellOnly=1&G5MID=052119071109056048054057085057079121108097120099075117068089100068089084043048101043098053076105052097056050047110098085078120075090073066076116116112089043067103066054066121048&G5statusflag=view&G5genie=661&G5button=12&vw_worksheet=4087&vw_type=mySchoolOnly&school_id=7")
-page
+import pickle
+from apiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
 from bs4 import BeautifulSoup
+# from datetime import datetime
+
+# HTML request/parse
+print("Connecting...")
+try:
+    page = requests.get("https://www.chlathletics.org/g5-bin/client.cgi?cwellOnly=1&G5MID=052119071109056048054057085057079121108097120099075117068089100068089084043048101043098053076105052097056050047110098085078120075090073066076116116112089043067103066054066121048&G5statusflag=view&G5genie=661&G5button=12&vw_worksheet=4087&vw_type=mySchoolOnly&school_id=7")
+except ConnectionRefusedError:
+    print("Connection refused")
+page
 rawhtml = BeautifulSoup(page.content, 'html.parser')
 
 # OAuth 2.0 Setup
-from apiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 scopes = ['https://www.googleapis.com/auth/calendar']
 flow = InstalledAppFlow.from_client_secrets_file('client_secret_THS.json', scopes=scopes)
 
 # ONLY RUN FIRST TIME:
 #credentials = flow.run_console()
-import pickle
-# ONLY RUN FIRST TIME:
 #pickle.dump(credentials, open("token.pkl", "wb"))
+
 credentials = pickle.load(open("token.pkl", "rb"))
 service = build("calendar", "v3", credentials=credentials)
 
@@ -27,30 +38,33 @@ oppocell = 37
 locacell = 38
 UIDnum = 0
 
+def func_end_of_schedule():
+    print ("")
+
 def func_loop():
     global loopbool, datecell, typecell, timecell, oppocell, locacell, UIDnum
-    while loopbool == True:
-        datecell += 9
-        typecell += 9
-        timecell += 9
-        oppocell += 9
-        locacell += 9
-        UIDnum += 1
+    datecell += 9
+    typecell += 9
+    timecell += 9
+    oppocell += 9
+    locacell += 9
+    UIDnum += 1
+    if loopbool == True:
         func_new_event()
 
 #Define new_event function
 def func_new_event():
     global loopbool, datecell, typecell, timecell, oppocell, locacell, UIDnum
     global time, location, type, date
-    time = rawhtml.find_all('td')[timecell].get_text()
-    location = rawhtml.find_all('td')[locacell].get_text()
-    type = rawhtml.find_all('td')[typecell].get_text()
     date = rawhtml.find_all('td')[datecell].get_text()
+    time = rawhtml.find_all('td')[timecell].get_text()
     if date == '':
-        loopbool = False
+        print("Stop here")
     elif time == r'TBD\xa0':
         func_loop()
     else:
+        location = rawhtml.find_all('td')[locacell].get_text()
+        type = rawhtml.find_all('td')[typecell].get_text()
         year = date.split(' ')[3]
         day = date.split(' ')[2]
         day = day[:-1]
@@ -82,13 +96,15 @@ def func_new_event():
         elif month == 'Dec':
             month = '12'
         #Assign/format time variables
-        from datetime import datetime
         time = time[:-1]
         if time[1] == ':':
             time = '0' + time
         if time[:2] == 'TB':
             func_loop()
-        hour = int(time[:2])
+        try:
+            hour = int(time[:2])
+        except ValueError:
+            func_end_of_schedule()
         meridian = time[5:]
         #Special-case '12AM' -> 0, '12PM' -> 12 (not 24)
         if (hour == 12):
@@ -131,5 +147,7 @@ def func_new_event():
         func_loop()
 
 
-func_new_event()
-print("END")
+if loopbool == True:
+    func_new_event()
+else:
+    print("END")
