@@ -1,6 +1,6 @@
 # HTML request/parse
 import requests
-page = requests.get("https://www.chlathletics.org/g5-bin/client.cgi?cwellOnly=1&G5MID=052119071109056048054057085057079121108097120099075117068089100068089084043048101052089074114105052097056050047110098085078120075090073066076116116112089043067103066054066121048&G5statusflag=view&G5genie=661&G5button=12&vw_worksheet=3934&vw_type=mySchoolOnly&school_id=7")
+page = requests.get("https://www.chlathletics.org/g5-bin/client.cgi?cwellOnly=1&G5MID=052119071109056048054057085057079121108097120099075117068089100068089084043048101043098053076105052097056050047110098085078120075090073066076116116112089043067103066054066121048&G5statusflag=view&G5genie=661&G5button=12&vw_worksheet=4087&vw_type=mySchoolOnly&school_id=7")
 page
 from bs4 import BeautifulSoup
 rawhtml = BeautifulSoup(page.content, 'html.parser')
@@ -27,7 +27,7 @@ oppocell = 37
 locacell = 38
 UIDnum = 0
 
-def loop():
+def func_loop():
     global loopbool, datecell, typecell, timecell, oppocell, locacell, UIDnum
     while loopbool == True:
         datecell += 9
@@ -36,11 +36,10 @@ def loop():
         oppocell += 9
         locacell += 9
         UIDnum += 1
-        new_event()
-
+        func_new_event()
 
 #Define new_event function
-def new_event():
+def func_new_event():
     global loopbool, datecell, typecell, timecell, oppocell, locacell, UIDnum
     global time, location, type, date
     time = rawhtml.find_all('td')[timecell].get_text()
@@ -50,7 +49,7 @@ def new_event():
     if date == '':
         loopbool = False
     elif time == r'TBD\xa0':
-        loop()
+        func_loop()
     else:
         year = date.split(' ')[3]
         day = date.split(' ')[2]
@@ -88,7 +87,7 @@ def new_event():
         if time[1] == ':':
             time = '0' + time
         if time[:2] == 'TB':
-            loop()
+            func_loop()
         hour = int(time[:2])
         meridian = time[5:]
         #Special-case '12AM' -> 0, '12PM' -> 12 (not 24)
@@ -129,8 +128,8 @@ def new_event():
         }
         imported_event = service.events().import_(calendarId='primary', body=event).execute()
         print ("Event imported ID: " + imported_event['id'])
-        loop()
+        func_loop()
 
 
-new_event()
+func_new_event()
 print("END")
