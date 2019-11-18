@@ -12,6 +12,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from bs4 import BeautifulSoup
 # from datetime import datetime
 
+var_break = 0
 cell_sportURL = 0
 cell_sport = 0
 datecell = 34
@@ -21,7 +22,7 @@ oppocell = 37
 locacell = 38
 name = list_sport[cell_sport]
 UIDnum = 0
-UIDnum_prefix = 1000
+UIDnum_prefix = 100
 
 # HTML request/parse
 print("Connecting...")
@@ -52,7 +53,7 @@ service = build("calendar", "v3", credentials=credentials)
 
 #Define new_event function
 def func_new_event():
-     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, name, var_dst
+     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, name, var_dst, var_break
      date = rawhtml.find_all('td')[datecell].get_text()
      time = rawhtml.find_all('td')[timecell].get_text()
      if date == '':
@@ -64,18 +65,17 @@ def func_new_event():
           oppocell = 37
           locacell = 38
           UIDnum = 0
-          UIDnum_prefix += 1000
+          UIDnum_prefix += 100
           cell_sportURL += 1
           cell_sport += 1
-          try:
-                name = list_sport[cell_sport]
-          except IndexError:
-                print('Done!')
-                return
      else:
           date = rawhtml.find_all('td')[datecell].get_text()
           time = rawhtml.find_all('td')[timecell].get_text()
-          name = list_sport[cell_sport]
+          try:
+                name = list_sport[cell_sport]
+          except IndexError:
+              var_break = 1
+              return
           location = rawhtml.find_all('td')[locacell].get_text()
           type = rawhtml.find_all('td')[typecell].get_text()
           year = date.split(' ')[3]
@@ -112,11 +112,6 @@ def func_new_event():
           if time[1] == ':':
                 time = '0' + time
           if time[:2] == 'TB':
-                datecell += 9
-                typecell += 9
-                timecell += 9
-                oppocell += 9
-                locacell += 9
                 print("Skipped event with TBA date")
           else:
                 hour = int(time[:2])
@@ -182,14 +177,20 @@ def func_new_event():
                 }
                 imported_event = service.events().import_(calendarId='primary', body=event).execute()
                 print ("Imported Event UID: " + str(UIDfull))
-                datecell += 9
-                typecell += 9
-                timecell += 9
-                oppocell += 9
-                locacell += 9
-                UIDnum += 1
 
 while True:
-     func_new_event()
+     try:
+         func_new_event()
+     except KeyboardInterrupt:
+         print('Script Aborted')
+         break
+     if var_break == 1:
+         break
+     datecell += 9
+     typecell += 9
+     timecell += 9
+     oppocell += 9
+     locacell += 9
+     UIDnum += 1
 
 print("END")
