@@ -1,17 +1,23 @@
+# Try to import variables from a config.py file
 try:
-     from config import *
-     print("config file imported")
+    from config import *
+    print("config file imported")
 except ModuleNotFoundError:
-     print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
+    # Throws an error if config.py is not present
+    print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
 
-
+# Try to import modules
 import requests
 import pickle
-from apiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from bs4 import BeautifulSoup
-# from datetime import datetime
+try:
+    from apiclient.discovery import build
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from bs4 import BeautifulSoup
+except ModuleNotFoundError:
+    # Throws an error if the correct modules are not present
+    print('\33[31m' + 'Err: Google Calendar API modules were not found. Consider running install_modules.sh' + '\033[0m')
 
+# Initialize variables
 var_break = 0
 cell_sportURL = 0
 cell_sport = 0
@@ -31,12 +37,10 @@ try:
 except ConnectionRefusedError:
      print("Connection refused")
 
-
 if str(page) == "<Response [200]>":
      print("Connected")
 else:
      print("Connection timed out")
-
 
 rawhtml = BeautifulSoup(page.content, 'html.parser')
 
@@ -185,6 +189,7 @@ while True:
          print('Script Aborted')
          break
      if var_break == 1:
+         print("END")
          break
      datecell += 9
      typecell += 9
@@ -192,5 +197,3 @@ while True:
      oppocell += 9
      locacell += 9
      UIDnum += 1
-
-print("END")
