@@ -96,6 +96,11 @@ def func_new_event():
           location = rawhtml.find_all('td')[locacell].get_text()
           type = rawhtml.find_all('td')[typecell].get_text()
           year = date.split(' ')[3]
+          #           Exception has occurred: IndexError
+          # list index out of range
+          #   File "/home/richie/Projects/AthCal/AthCalMain.py", line 98, in func_new_event
+          #     year = date.split(' ')[3]
+          #   File "/home/richie/Projects/AthCal/AthCalMain.py", line 215, in <module>
           day = date.split(' ')[2]
           day = day[:-1]
           day = '%02d' % int(day)
