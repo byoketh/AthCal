@@ -30,8 +30,8 @@ name = list_sport[cell_sport]
 UIDnum = 0
 UIDnum_prefix = 100
 
-# HTML request/parse
-print("Connecting...")
+# Initial HTML request/parse
+print("Connecting to schedule...")
 try:
      page = requests.get(list_sportURL[cell_sportURL])
 except ConnectionRefusedError:
@@ -57,7 +57,7 @@ service = build("calendar", "v3", credentials=credentials)
 
 #Define new_event function
 def func_new_event():
-     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, name, var_dst, var_break
+     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, name, var_dst, var_break, rawhtml
      date = rawhtml.find_all('td')[datecell].get_text()
      time = rawhtml.find_all('td')[timecell].get_text()
      if date == '':
@@ -72,6 +72,19 @@ def func_new_event():
           UIDnum_prefix += 100
           cell_sportURL += 1
           cell_sport += 1
+          # HTML request/parse
+          print("Connecting to schedule...")
+          try:
+               page = requests.get(list_sportURL[cell_sportURL])
+          except ConnectionRefusedError:
+               print("Connection refused")
+
+          if str(page) == "<Response [200]>":
+               print("Connected")
+          else:
+               print("Connection timed out")
+
+          rawhtml = BeautifulSoup(page.content, 'html.parser')
      else:
           date = rawhtml.find_all('td')[datecell].get_text()
           time = rawhtml.find_all('td')[timecell].get_text()
@@ -117,6 +130,12 @@ def func_new_event():
                 time = '0' + time
           if time[:2] == 'TB':
                 print("Skipped event with TBA date")
+                datecell += 9
+                typecell += 9
+                timecell += 9
+                oppocell += 9
+                locacell += 9
+                UIDnum += 1
           else:
                 hour = int(time[:2])
                 meridian = time[5:]
@@ -181,8 +200,15 @@ def func_new_event():
                 }
                 imported_event = service.events().import_(calendarId='primary', body=event).execute()
                 print ("Imported Event UID: " + str(UIDfull))
+                datecell += 9
+                typecell += 9
+                timecell += 9
+                oppocell += 9
+                locacell += 9
+                UIDnum += 1
 
 while True:
+     # input("Press Enter To Add Another Event")
      try:
          func_new_event()
      except KeyboardInterrupt:
@@ -191,9 +217,3 @@ while True:
      if var_break == 1:
          print("END")
          break
-     datecell += 9
-     typecell += 9
-     timecell += 9
-     oppocell += 9
-     locacell += 9
-     UIDnum += 1
