@@ -1,7 +1,12 @@
+# Define and print version and welcome splash
+versionNum = '0.9.5'
+versionType = 'Alpha'
+versionFull = versionNum + ' ' + versionType
+print('Starting AthCal ' + versionFull + '...')
+
 # Try to import variables from a config.py file
 try:
-    from config import *
-    print("config file imported")
+    from config import list_sport, list_sportURL
 except ModuleNotFoundError:
     # Throws an error if config.py is not present
     print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
@@ -15,7 +20,7 @@ try:
     from bs4 import BeautifulSoup
 except ModuleNotFoundError:
     # Throws an error if the correct modules are not present
-    print('\33[31m' + 'Err: Google Calendar API modules were not found. Consider running install_modules.sh' + '\033[0m')
+    print('\33[31m' + 'Err: One or more Google Calendar API modules were not found. Consider running install_modules.sh' + '\033[0m')
 
 # Initialize variables
 var_break = 0
