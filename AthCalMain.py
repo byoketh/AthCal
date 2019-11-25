@@ -120,7 +120,6 @@ def func_create_event():
           locacell += 9
           UIDnum += 1
      else:
-          print('Time:' + time)
           hour = int(time[:2])
           meridian = time[5:]
           #Special-case '12AM' -> 0, '12PM' -> 12 (not 24)
@@ -171,21 +170,20 @@ def func_create_event():
             'summary': title,
             'location': location,
             'organizer': {
-               'email': 'thsathcal@gmail.com',
-               'displayName': 'CHLAthCal'
+              'email': 'thsathcal@gmail.com',
+              'displayName': 'CHLAthCal'
             },
             'start': {
-               'dateTime': starttime
+              'dateTime': starttime
             },
             'end': {
-               'dateTime': endtime
+              'dateTime': endtime
             },
             'iCalUID': UID
           }
-          #  imported_event = service.events().import_(calendarId='primary', body=event).execute()
+
+          imported_event = service.events().import_(calendarId='primary', body=event).execute()
           print ("Imported Event UID: " + str(UIDfull))
-          print(datecell)
-          print(date)
 
 def func_end_schedule():
      global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, name, var_dst, var_break, rawhtml, date, time, location
