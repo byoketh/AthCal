@@ -1,17 +1,17 @@
 # Define and print version and welcome splash
-versionNum = '0.9.5'
-versionType = 'Alpha'
+versionNum = '1.0.2'
+versionType = 'Beta'
 versionFull = versionNum + ' ' + versionType
 print('Starting AthCal ' + versionFull + '...')
 
-# Try to import variables from a config.py file
+# Import variables from config.py
 try:
     from config import list_sport, list_sportURL
 except ModuleNotFoundError:
     # Throws an error if config.py is not present
     print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
 
-# Try to import modules
+# Import modules
 import requests
 import pickle
 try:
@@ -53,7 +53,7 @@ rawhtml = BeautifulSoup(page.content, 'html.parser')
 scopes = ['https://www.googleapis.com/auth/calendar']
 flow = InstalledAppFlow.from_client_secrets_file('client_secret_THS.json', scopes=scopes)
 
-# ONLY RUN FIRST TIME:
+# ONLY RUN THESE THE FIRST TIME:
 #credentials = flow.run_console()
 #pickle.dump(credentials, open("token.pkl", "wb"))
 
@@ -72,11 +72,15 @@ def func_create_event():
      location = rawhtml.find_all('td')[locacell].get_text()
      type = rawhtml.find_all('td')[typecell].get_text()
      year = date.split(' ')[3]
+          # If the following error occurs more than one event is on one day, pushing the cell variables ahead by one. 
+          # Find the type of event causing the error and add it to the exception "elif date[:-1] in" in func_main()
+          # 
           # Exception has occurred: IndexError
           # list index out of range
-          #   File "/home/richie/Projects/AthCal/AthCalMain.py", line 98, in func_new_event
+          #   File "/home/richie/Projects/AthCal/AthCalMain.py", line X, in func_new_event
           #     year = date.split(' ')[3]
-          #   File "/home/richie/Projects/AthCal/AthCalMain.py", line 215, in <module>
+          #   File "/home/richie/Projects/AthCal/AthCalMain.py", line X, in <module>
+     # Format date/time variables for the API
      day = date.split(' ')[2]
      day = day[:-1]
      day = '%02d' % int(day)
@@ -181,7 +185,7 @@ def func_create_event():
             },
             'iCalUID': UID
           }
-
+          # comment out line below to simulate importing events instead of actually adding them to a calendar
           imported_event = service.events().import_(calendarId='primary', body=event).execute()
           print ("Imported Event UID: " + str(UIDfull))
 
@@ -243,10 +247,12 @@ def func_main():
           UIDnum += 1
 
 while True:
+     # uncomment line below to import each event manually
      # input("Press Enter To Add Another Event")
      try:
          func_main()
      except KeyboardInterrupt:
+         print('')
          print('Script Aborted')
          break
      if var_break == 1:
