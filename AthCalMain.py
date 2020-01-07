@@ -1,15 +1,26 @@
+try:
+    from config import *
+    print('Config data imported successfully')
+except ModuleNotFoundError:
+    print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
+
 # Define and print version and welcome splash
-versionNum = '1.0.2'
+versionNum = '2.0.1'
 versionType = 'Beta'
+if dev_mode == True:
+    versionType = versionType + ' ' + 'in developer mode'
+
 versionFull = versionNum + ' ' + versionType
 print('Starting AthCal ' + versionFull + '...')
 
-# Import variables from config.py
+# Import variables from schedules.py
+print("Importing schedule data...")
 try:
-    from config import list_sport, list_sportURL
+    from schedules import list_sport, list_sportURL
+    print('Schedule data imported successfully')
 except ModuleNotFoundError:
-    # Throws an error if config.py is not present
-    print('\33[31m' + 'Err: config.py was not found' + '\033[0m')
+    # Throws an error if schedules.py is not present
+    print('\33[31m' + 'Err: schedules.py was not found' + '\033[0m')
 
 # Import modules
 import requests
@@ -36,7 +47,8 @@ UIDnum = 0
 UIDnum_prefix = 100
 
 # Initial HTML request/parse
-print("Connecting to schedule...")
+begin_schedule_string = "Connecting to %s schedule..." % (list_sport[cell_sport])
+print(begin_schedule_string)
 try:
      page = requests.get(list_sportURL[cell_sportURL])
 except ConnectionRefusedError:
@@ -110,11 +122,12 @@ def func_create_event():
      elif month == 'Dec':
           month = '12'
      else:
-          print("Date could not be parsed")
+          print("ERR: Date could not be correctly parsed")
      #Assign/format time variables
      time = time[:-1]
      if time[1] == ':':
            time = '0' + time
+
      if time[:2] == 'TB':
           print("Skipped event with TBA date")
           datecell += 9
@@ -134,22 +147,23 @@ def func_create_event():
           time = "%02d" % hour + time[2:8]
           time = time[:-2]
           #Daylight Savings Time:
-          if month in ('Jan','Feb','Mar','Dec'): #NOT DST
+          print(day)
+          if month in ('01','02','12'): #NOT DST
                var_dst = False
-          elif month == 'Mar': #START DST
-               if day < 10:
+          elif month == '03': #START DST
+               if int(day) < 8:
                     var_dst = False
-               elif day >= 10:
+               elif int(day) >= 8:
                     var_dst = True
-          elif month == 'Nov': #END DST
-               if day >= 3:
+          elif month == '11': #END DST
+               if int(day) >= 1:
                     var_dst = False
-               if day < 3:
+               if int(day) < 1:
                     var_dst = True
-          elif month in ('Apr','May','Jun','Jul','Aug','Sep','Oct'): #DST
+          elif month in ('04','05','06','07','08','09','10'): #DST
                var_dst = True
           else:
-               var_dst = True
+               print("Daylight Savings time could not be properly calculated")
           #Put all time related variables together
           if var_dst is True:
                dst = ":00.000-04:00"
@@ -208,7 +222,8 @@ def func_end_schedule():
      except IndexError:
           return
      
-     print("Connecting to schedule...")
+     begin_schedule_string = "Connecting to %s schedule..." % (list_sport[cell_sport])
+     print(begin_schedule_string)
      if str(page) == "<Response [200]>":
           print("Connected")
      else:
@@ -247,15 +262,15 @@ def func_main():
           UIDnum += 1
 
 while True:
-     # uncomment line below to import each event manually
-     # input("Press Enter To Add Another Event")
+     if dev_mode == True:
+          input("Press enter to import an event")
      try:
          func_main()
      except KeyboardInterrupt:
          print('')
-         print('Script Aborted')
+         print('The script was aborted')
          break
      if var_break == 1:
          print('')
-         print('Scrpit Completed Succsessfully')
+         print('The scrpit has completed succsessfully')
          break
