@@ -17,7 +17,7 @@ print('Starting AthCal ' + versionFull + '...')
 # Import variables from schedules.py
 print("Importing schedule data...")
 try:
-    from schedules import list_sport, list_sportURL, list_sportCALID
+    from schedules import list_sport, list_sportURL, list_sportCALID, list_length
     print('Schedule data imported successfully')
 except ModuleNotFoundError:
     # Throws an error if schedules.py is not present
@@ -39,12 +39,14 @@ var_break = 0
 cell_sportURL = 0
 cell_sport = 0
 cell_sportCALID = 0
+cell_length = 0
 datecell = 34
 typecell = 35
 timecell = 36
 oppocell = 37
 locacell = 38
 name = list_sport[cell_sport]
+event_length = list_length[cell_length]
 UIDnum = 0
 UIDnum_prefix = 100
 
@@ -75,7 +77,7 @@ credentials = pickle.load(open("token.pkl", "rb"))
 service = build("calendar", "v3", credentials=credentials)
 
 def func_create_event():
-     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, cell_sportCALID, name, var_dst, var_break, rawhtml, date, time, location
+     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, cell_sportCALID, cell_length, name, var_dst, var_break, rawhtml, date, time, location
      try:
           name = list_sport[cell_sport]
      except IndexError:
@@ -174,14 +176,14 @@ def func_create_event():
           finaldate = year + "-" + month + "-" + day + "T" + time + dst
           starttime = finaldate
           changehour = int(finaldate[11:-16])
-          changehour += 2
+          changehour += list_length[cell_length]
           endtime = finaldate[:11] + str(changehour) + finaldate[13:]
           #Format location
           location = location[:-1]
           #Format type
           type = type[:-1]
           #Create title
-          title = name + " " + location + " " + type
+          title = name + " " + type
           #Define event iCalUID
           UIDfull = UIDnum_prefix + UIDnum
           UID = str(UIDfull)
@@ -202,7 +204,7 @@ def func_create_event():
           print ("Imported Event UID: " + str(UIDfull))
 
 def func_end_schedule():
-     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, cell_sportCALID, name, var_dst, var_break, rawhtml, date, time, location
+     global datecell, timecell, locacell, typecell, oppocell, UIDnum, UIDnum_prefix, cell_sportURL, cell_sport, cell_sportCALID, cell_length, name, var_dst, var_break, rawhtml, date, time, location
      end_of_schedule = "End of %s Schedule" % (name)
      print(end_of_schedule)
      datecell = 34
@@ -215,14 +217,17 @@ def func_end_schedule():
      cell_sportURL += 1
      cell_sport += 1
      cell_sportCALID += 1
+     cell_length += 1
      # HTML request/parse
      try:
-          page = requests.get(list_sportURL[cell_sportURL])
+          schedule_string = list_sport[cell_sport]
      except IndexError:
+          var_break = 1
           return
-     
-     begin_schedule_string = "Connecting to %s schedule..." % (list_sport[cell_sport])
+     begin_schedule_string = "Connecting to %s schedule..." % (schedule_string)
      print(begin_schedule_string)
+     page = requests.get(list_sportURL[cell_sportURL])
+     
      if str(page) == "<Response [200]>":
           print("Connected")
      else:
@@ -239,7 +244,7 @@ def func_main():
           func_end_schedule()
      if date == '':
           func_end_schedule()
-     elif date[:-1] in ('Match', 'Invitational', 'Double Header'):
+     elif date[:-1] in ('Match', 'Invitational', 'Double Header', 'Triangular'):
           datecell -= 9
           typecell -= 1
           timecell -= 1
