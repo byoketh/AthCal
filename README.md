@@ -1,7 +1,9 @@
 # AthCal
-> Short blurb about what AthCal does.
+> AthCal is an athletic calendar creation script written in Python 3
 
-One to two paragraphs about AthCal
+AthCal was created to automate the creation of master calendars for school districts, 
+and to lessen the work load for district administrators.  Now, even students can be added 
+calendars it creates to follow their schools sports teams.
 
 ## Release History
 
