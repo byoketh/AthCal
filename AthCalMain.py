@@ -36,7 +36,7 @@ try:
     from bs4 import BeautifulSoup
 except ModuleNotFoundError:
     # Throws an error if the correct modules are not present
-    print('\33[31m' + 'Err: One or more Google Calendar API modules were not found. Consider running install_modules.sh' + '\033[0m')
+    print('\33[31m' + 'Err: One or more Google Calendar API modules were not found. Consider running install_modules.sh or install_modules.ps1' + '\033[0m')
 
 # Initialize variables
 var_break = False
@@ -72,13 +72,13 @@ rawhtml = BeautifulSoup(page.content, 'html.parser')
 
 # OAuth 2.0 Setup
 scopes = ['https://www.googleapis.com/auth/calendar']
-flow = InstalledAppFlow.from_client_secrets_file('client_secret_THS.json', scopes=scopes)
+flow = InstalledAppFlow.from_client_secrets_file(r"C:\Users\rdcor\Projects\AthCal\client_secret_THS.json", scopes=scopes)
 
-# ONLY RUN THESE WHEN ADDING CALENDER ACCOUNT(S) FOR THE FIRST TIME:
+# ONLY RUN THESE WHEN ADDING CALENDER ACCOUNT(S)/RUNNING SCRIPT FOR THE FIRST TIME:
 #credentials = flow.run_console()
-#pickle.dump(credentials, open("token.pkl", "wb"))
+#pickle.dump(credentials, open(r"C:\Users\rdcor\Projects\AthCal\token.pkl", "wb"))
 
-credentials = pickle.load(open("token.pkl", "rb"))
+credentials = pickle.load(open(r"C:\Users\rdcor\Projects\AthCal\token.pkl", "rb"))
 service = build("calendar", "v3", credentials=credentials)
 
 def func_create_event():
@@ -94,9 +94,9 @@ def func_create_event():
         # 
         # Exception has occurred: IndexError
         # list index out of range
-        #   File "/home/richie/Projects/AthCal/AthCalMain.py", line X, in func_new_event
+        #   File "/PATH/TO/SCRIPT/AthCalMain.py", line X, in func_new_event
         #     year = date.split(' ')[3]
-        #   File "/home/richie/Projects/AthCal/AthCalMain.py", line X, in <module>
+        #   File "/PATH/TO/SCRIPT/AthCalMain.py", line X, in <module>
     # Format date/time variables for the API
     day = date.split(' ')[2]
     day = day[:-1]
@@ -202,7 +202,13 @@ def func_create_event():
         }
         # '2qqfnf88phkqtjcuchqneooti0@group.calendar.google.com' is the test calID
         # comment out the line below to simulate importing events without actually adding them to a calendar
-        imported_event = service.events().import_(calendarId=list_sportCALID[cell_sportCALID], body=event).execute()
+        try:
+            imported_event = service.events().import_(calendarId=list_sportCALID[cell_sportCALID], body=event).execute()
+        except googleapiclient.errors.HttpError:
+            if dev_mode == 1:
+                print("HTTP 403 Error caught, wait 5 sec and try again")
+            time.sleep(5)
+
         if dev_mode == 1:
             importString = ("Imported Event UID: " + uidString)
  
@@ -231,9 +237,9 @@ def func_end_schedule():
         return
     begin_schedule_string = "Connecting to %s schedule..." % (schedule_string)
     print(begin_schedule_string)
-    page = requests.get(list_sportURL[cell_sportURL])
-     
+
 if dev_mode == 1:
+    page = requests.get(list_sportURL[cell_sportURL])
     if str(page) == "<Response [200]>":
         print("Connected")
     else:
